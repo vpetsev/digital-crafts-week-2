@@ -1,6 +1,6 @@
 import os
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 table_list = []
 total_time_played = 0
@@ -29,9 +29,7 @@ def view_tables(table_to_check):
         ''')
 
 def time_adder():
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    return current_time
+    return datetime.now().isoformat(timespec='seconds')
 
 def mark_as_occupied(table_num):
     for i in range(0, len(table_list)):
@@ -44,23 +42,33 @@ def mark_as_occupied(table_num):
             print(f'Table {table_num} is already occupied')
 
 def mark_as_unoccupied(table_num):
-    tbl = table_list[i]
-    if (tbl["table_number"] == table_num) and (tbl["occupied"] == "Occupied"):
-        tbl["occupied"] != 'Not Occupied' # ???
-        tbl["end_time"] = time_adder()            
-        start_time_delta = datetime.strptime(tbl["start_time"], "%H:%M:%S")
-        end_time_delta = datetime.strptime(tbl["end_time"], "%H:%M:%S")
-        minutes_played = str(end_time_delta - start_time_delta)  # timedelta type
-        tbl["num_minutes_played"] = minutes_played
-        table_reset(table_num, minutes_played)
-        print(f"Table occupied for {minutes_played}")
-        print(f"Total time table {table_num} used today: {total_time_played}")
+    tbl = next((table for table in table_list if table['table_number'] == table_num), None)
+    if tbl is None or tbl['occupied'] != 'Occupied':
+        return False
+    end_time = time_adder()
+    end = datetime.fromisoformat(end_time)
+    try:
+        start = datetime.fromisoformat(tbl['start_time'])
+    except ValueError:
+        # Existing JSON files contain time-only values; assume the latest occurrence.
+        start = datetime.combine(end.date(), datetime.strptime(tbl['start_time'], '%H:%M:%S').time())
+        if start > end:
+            start -= timedelta(days=1)
+    minutes_played = (end - start).total_seconds() / 60
+    if minutes_played < 0:
+        raise ValueError('Table start time is after its end time')
+    tbl['end_time'] = end_time
+    tbl['occupied'] = 'Not Occupied'
+    table_reset(table_num, minutes_played)
+    print(f'Table occupied for {minutes_played} minutes')
+    return True
         
 
 def table_reset(table_to_reset, min_played):
-    table_reset = table_list[table_to_reset]
-    datetime_time_played = datetime.strptime(min_played)
-    table_reset["num_minutes_played"] += datetime_time_played
+    global total_time_played
+    table = next(table for table in table_list if table['table_number'] == table_to_reset)
+    table['num_minutes_played'] = min_played
+    total_time_played += min_played
 
 def end_of_day_date_adder():
     today = date.today()

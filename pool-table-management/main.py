@@ -12,10 +12,10 @@ running = True
 class InitializeTable:
     def __init__(self, table_number):
         self.table_number = table_number
-        self.is_occupied: False
-        self.start_time: 0
-        self.end_time: 0
-        self.number_of_minutes_played: 0
+        self.is_occupied = False
+        self.start_time = None
+        self.end_time = None
+        self.number_of_minutes_played = 0
 
 class PoolHall:
     def __init__(self, tables):
@@ -31,8 +31,11 @@ my_poolhall = PoolHall(tables)
 
 def table_viewer():
     for table in my_poolhall.tables:
-        print(f'Table number: {table.table_number}')
-    # print(f'Occupied: {table.is_occupied}')
+        print(f'''Table number: {table.table_number}
+Occupied: {table.is_occupied}
+Start time: {table.start_time}
+End time: {table.end_time}
+Minutes Played: {table.number_of_minutes_played}''')
 
 # my_poolhall.viewAllTables()
 
@@ -56,17 +59,7 @@ while running:
         table_num = input("Choose a table to mark occupied.")
         # logic.mark_as_occupied(table_num)
     elif choice == '2':
-        print(tables)
-        for table in my_poolhall.tables:
-             print(f'Table number: {table.table_number}')
-        for i in range(0, len(tables)):
-            print(f'''
-                Table_number: {tables[i]["table_number"]}
-                Occupied: {tables[i]["occupied"]}
-                Start time: {tables[i]["start_time"]}
-                End time: {tables[i]["end_time"]}
-                Minutes Played: {tables[i]["num_minutes_played"]}
-            ''')
+        table_viewer()
     if choice == 'q':
         break
 
